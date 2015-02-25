@@ -6,20 +6,29 @@ class CatalogController < ApplicationController
   include Blacklight::Catalog
   include Hydra::Controller::ControllerBehavior
   # These before_filters apply the hydra access controls
-  before_filter :enforce_show_permissions, :only=>:show
+  #before_filter :enforce_show_permissions, :only=>:show
   # This applies appropriate access controls to all solr queries
-  CatalogController.solr_search_params_logic += [:add_access_controls_to_solr_params]
+  #CatalogController.solr_search_params_logic += [:add_access_controls_to_solr_params]
 
 
   configure_blacklight do |config|
     config.default_solr_params = {
-      :qt => 'search',
-      :rows => 10
+        :qf => 'desc_metadata__title_tesim desc_metadata__author_tesim',
+        :qt => 'search',
+        :rows => 10
     }
 
     # solr field configuration for search results/index views
-    config.index.title_field = 'title_tesim'
+    #ORIGINAL
+    #config.index.title_field = 'title_tesim'
+    #config.index.display_type_field = 'has_model_ssim'
+    
+
+    #MODIFIED
+    config.index.title_field = 'desc_metadata__title_tesim'
+    config.index.author_field = 'desc_metadata__author_tesim'
     config.index.display_type_field = 'has_model_ssim'
+    
 
 
     # solr fields that will be treated as facets by the blacklight application
@@ -62,6 +71,10 @@ class CatalogController < ApplicationController
     config.add_index_field solr_name('title', :stored_searchable, type: :string), :label => 'Title:'
     config.add_index_field solr_name('title_vern', :stored_searchable, type: :string), :label => 'Title:'
     config.add_index_field solr_name('author', :stored_searchable, type: :string), :label => 'Author:'
+    
+    #ADDED
+    config.add_index_field solr_name('desc_metadata__author', :stored_searchable, type: :string), :label => 'Author:'
+
     config.add_index_field solr_name('author_vern', :stored_searchable, type: :string), :label => 'Author:'
     config.add_index_field solr_name('format', :symbol), :label => 'Format:'
     config.add_index_field solr_name('language', :stored_searchable, type: :string), :label => 'Language:'
@@ -71,11 +84,16 @@ class CatalogController < ApplicationController
 
     # solr fields to be displayed in the show (single result) view
     #   The ordering of the field names is the order of the display
-    config.add_show_field solr_name('title', :stored_searchable, type: :string), :label => 'Title:'
+    config.add_show_field solr_name('title', :stored_searchable, type: :string), :label => 'Title:'    
     config.add_show_field solr_name('title_vern', :stored_searchable, type: :string), :label => 'Title:'
     config.add_show_field solr_name('subtitle', :stored_searchable, type: :string), :label => 'Subtitle:'
     config.add_show_field solr_name('subtitle_vern', :stored_searchable, type: :string), :label => 'Subtitle:'
     config.add_show_field solr_name('author', :stored_searchable, type: :string), :label => 'Author:'
+
+    #ADDED
+    config.add_show_field solr_name('desc_metadata__author', :stored_searchable, type: :string), :label => 'Author:'
+
+    
     config.add_show_field solr_name('author_vern', :stored_searchable, type: :string), :label => 'Author:'
     config.add_show_field solr_name('format', :symbol), :label => 'Format:'
     config.add_show_field solr_name('url_fulltext_tsim', :stored_searchable, type: :string), :label => 'URL:'
@@ -116,16 +134,34 @@ class CatalogController < ApplicationController
       # syntax, as eg {! qf=$title_qf }. This is neccesary to use
       # Solr parameter de-referencing like $title_qf.
       # See: http://wiki.apache.org/solr/LocalParams
+
+      #ADDED
+      
       field.solr_local_parameters = {
-        :qf => '$title_qf',
-        :pf => '$title_pf'
+        :qf => '$desc_metadata__title_qf',
+        :pf => '$desc_metadata__title_pf'
       }
+      
+#ORIGINAL
+      # field.solr_local_parameters = {
+      #   :qf => '$title_qf',
+      #   :pf => '$title_pf'
+      # }
     end
 
+    #original
+    # config.add_search_field('author') do |field|
+    #   field.solr_local_parameters = {
+    #     :qf => '$author_qf',
+    #     :pf => '$author_pf'
+    #   }
+    # end
+
+    #MODIFIED
     config.add_search_field('author') do |field|
       field.solr_local_parameters = {
-        :qf => '$author_qf',
-        :pf => '$author_pf'
+        :qf => '$desc_metadata__author_qf',
+        :pf => '$desc_metadata__author_pf'
       }
     end
 
